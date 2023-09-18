@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Define the zone file path and A record details
+ZONE_FILE="/etc/bind/zones-db/db.charisma.digital"
+NEW_RECORD="$(a_record)"
+IP_ADDRESS="$(server_privateip)"
+
+# Check if the zone file exists
+if [ ! -f "$ZONE_FILE" ]; then
+  echo "Zone file $ZONE_FILE not found."
+  exit 1
+fi
+
+sudo cp "/etc/bind/zones-db/db.charisma.digital" "/etc/bind/zones-db/db.charisma.digital.bk-$(Build.BuildId)"
+
+# Add the A record to the zone file
+echo -e "$NEW_RECORD\tIN\tA\t$IP_ADDRESS" | sudo tee -a "$ZONE_FILE"
+
+# Update the serial number in the zone file
+CURRENT_SERIAL=$(grep -E '^\s*[0-9]*\s*;\s*Serial' "$ZONE_FILE" | awk '{print $1}')
+NEW_SERIAL=$(date +%Y%m%d%H%M%S) # Generate a new serial number (YYYYMMDDHHMM)
+
+if [ -n "$CURRENT_SERIAL" ]; then
+  # Replace the existing serial number with the new one
+  sudo sed -i "s/$CURRENT_SERIAL/$NEW_SERIAL/" "$ZONE_FILE"
+#else
+  # If no serial number found, add a new one
+#  echo -e "\t\t$NEW_SERIAL\t; Serial" >> "$ZONE_FILE"
+fi
+
+# Reload BIND9 to apply the changes
+sudo service bind9 reload
+
+echo "A record added for $NEW_RECORD with IP $IP_ADDRESS, and zone file serial number updated to $NEW_SERIAL."
