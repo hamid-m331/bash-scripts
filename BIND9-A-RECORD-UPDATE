@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the zone file path and A record details
-ZONE_FILE="/etc/bind/zones-db/db.charisma.digital"
+ZONE_FILE="/etc/bind/zones-db/db.domain.test"
 NEW_RECORD="$(a_record)"
 IP_ADDRESS="$(server_privateip)"
 
@@ -11,7 +11,7 @@ if [ ! -f "$ZONE_FILE" ]; then
   exit 1
 fi
 
-sudo cp "/etc/bind/zones-db/db.charisma.digital" "/etc/bind/zones-db/db.charisma.digital.bk-$(Build.BuildId)"
+sudo cp "/etc/bind/zones-db/db.domain.test" "/etc/bind/zones-db/db.domain.test.bk-$(Build.BuildId)"
 
 # Add the A record to the zone file
 echo -e "$NEW_RECORD\tIN\tA\t$IP_ADDRESS" | sudo tee -a "$ZONE_FILE"
